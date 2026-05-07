@@ -63,7 +63,7 @@ class RAGChain:
             model=settings.llm_model,
             mistral_api_key=settings.mistral_api_key,
             temperature=0,
-            max_tokens=1500,
+            max_tokens=8192,   # mistral-large-latest supports up to 128k context
         )
         self.prompt = ChatPromptTemplate.from_template(SYSTEM_PROMPT)
         self.parser = StrOutputParser()
