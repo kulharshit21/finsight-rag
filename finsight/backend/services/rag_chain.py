@@ -9,9 +9,9 @@ import time
 from typing import List, Optional, Tuple
 
 from langchain_mistralai import ChatMistralAI
-from langchain.prompts import ChatPromptTemplate
-from langchain.schema.output_parser import StrOutputParser
-from langchain.schema import Document
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.documents import Document
 
 from core.config import settings
 from services.vectorstore import VectorStoreService

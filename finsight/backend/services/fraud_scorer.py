@@ -19,7 +19,7 @@ Layer 2 — XGBoost classifier (optional, loads from fraud_model_path)
 import re
 from typing import List, Optional, Tuple
 
-from langchain.schema import Document
+from langchain_core.documents import Document
 
 from core.config import settings
 

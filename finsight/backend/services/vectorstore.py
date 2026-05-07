@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple
 
 from langchain_chroma import Chroma
 from langchain_mistralai import MistralAIEmbeddings
-from langchain.schema import Document
+from langchain_core.documents import Document
 
 from core.config import settings
 from services.ingestion import load_and_split
