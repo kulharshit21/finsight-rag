@@ -3,10 +3,10 @@ from typing import Optional
 
 
 class Settings(BaseSettings):
-    # LLM
-    openai_api_key: str
-    llm_model: str = "gpt-4o-mini"
-    embedding_model: str = "text-embedding-3-small"
+    # Mistral
+    mistral_api_key: str
+    llm_model: str = "mistral-large-latest"
+    embedding_model: str = "mistral-embed"
 
     # ChromaDB
     chroma_persist_dir: str = "./chroma_db"

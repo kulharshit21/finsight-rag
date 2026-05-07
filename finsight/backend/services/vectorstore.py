@@ -1,16 +1,11 @@
 """
-ChromaDB vector store wrapper.
-
-Handles all interactions with the persistent vector database:
-  - Ingest: dedup check → embed → store with metadata
-  - Search: similarity search with optional per-document filtering
-  - List / Delete: document management
+ChromaDB vector store wrapper using Mistral embeddings (mistral-embed).
 """
 
 from typing import List, Optional, Tuple
 
 from langchain_chroma import Chroma
-from langchain_openai import OpenAIEmbeddings
+from langchain_mistralai import MistralAIEmbeddings
 from langchain.schema import Document
 
 from core.config import settings
@@ -19,9 +14,9 @@ from services.ingestion import load_and_split
 
 class VectorStoreService:
     def __init__(self):
-        self.embeddings = OpenAIEmbeddings(
+        self.embeddings = MistralAIEmbeddings(
             model=settings.embedding_model,
-            openai_api_key=settings.openai_api_key,
+            mistral_api_key=settings.mistral_api_key,
         )
         self.db = Chroma(
             collection_name=settings.chroma_collection,
@@ -34,7 +29,6 @@ class VectorStoreService:
     def ingest(self, file_bytes: bytes, filename: str) -> dict:
         chunks, doc_id = load_and_split(file_bytes, filename)
 
-        # Dedup: if any chunk with this doc_id already exists, skip entirely
         existing = self.db.get(where={"doc_id": doc_id})
         if existing["ids"]:
             return {
@@ -64,10 +58,6 @@ class VectorStoreService:
         doc_ids: Optional[List[str]] = None,
         k: int = None,
     ) -> List[Tuple[Document, float]]:
-        """
-        Return (doc, relevance_score) pairs with score >= min_relevance_score.
-        Optionally filter to a specific list of doc_ids.
-        """
         k = k or settings.top_k_retrieval
         where = {"doc_id": {"$in": doc_ids}} if doc_ids else None
 

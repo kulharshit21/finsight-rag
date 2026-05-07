@@ -1,17 +1,14 @@
 """
-RAG chain — retrieval → context formatting → LLM generation.
+RAG chain — retrieval → context formatting → Mistral LLM generation.
 
-The system prompt enforces strict grounding rules:
-  - Never hallucinate figures
-  - Always cite page + document for every fact
-  - Explicitly flag contradictions across documents
-  - Gracefully decline when context is insufficient
+Uses mistral-large-latest for deterministic, grounded financial analysis.
+Temperature is set to 0 — no creativity, pure grounding.
 """
 
 import time
 from typing import List, Optional, Tuple
 
-from langchain_openai import ChatOpenAI
+from langchain_mistralai import ChatMistralAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.output_parser import StrOutputParser
 from langchain.schema import Document
@@ -42,13 +39,12 @@ Answer (with citations):"""
 
 
 def _format_context(docs_scores: List[Tuple[Document, float]]) -> Tuple[str, List[Source]]:
-    """Build the context string injected into the prompt and the Source list for citations."""
     parts: List[str] = []
     sources: List[Source] = []
 
     for doc, score in docs_scores:
         meta = doc.metadata
-        page = meta.get("page", 0) + 1          # PyPDFLoader is 0-indexed
+        page = meta.get("page", 0) + 1
         filename = meta.get("filename", "unknown")
         excerpt = doc.page_content[:200].replace("\n", " ")
 
@@ -63,10 +59,10 @@ def _format_context(docs_scores: List[Tuple[Document, float]]) -> Tuple[str, Lis
 class RAGChain:
     def __init__(self, vectorstore: VectorStoreService):
         self.vectorstore = vectorstore
-        self.llm = ChatOpenAI(
+        self.llm = ChatMistralAI(
             model=settings.llm_model,
-            openai_api_key=settings.openai_api_key,
-            temperature=0,       # deterministic — critical for financial data
+            mistral_api_key=settings.mistral_api_key,
+            temperature=0,
             max_tokens=1500,
         )
         self.prompt = ChatPromptTemplate.from_template(SYSTEM_PROMPT)
@@ -77,10 +73,7 @@ class RAGChain:
         question: str,
         doc_ids: Optional[List[str]] = None,
     ) -> Tuple[str, List[Source], List[Tuple], int]:
-        """
-        Returns (answer, sources, raw_docs_scores, latency_ms).
-        raw_docs_scores is passed downstream to RAGAS and the fraud scorer.
-        """
+        """Returns (answer, sources, raw_docs_scores, latency_ms)."""
         t0 = time.time()
 
         docs_scores = self.vectorstore.similarity_search(question, doc_ids=doc_ids)
